@@ -1,0 +1,23 @@
+(load "/home/tom/Documents/lisp_programs/riverend/utilities.lisp")
+(load "/home/tom/Documents/lisp_programs/riverend/new.lisp")
+
+(defparameter *world* nil)
+(defvar eye '(0 0 -700))
+
+(defparameter *red* '(255 0 0))
+(defparameter *blue* '(0 0 255))
+(defparameter *green* '(0 255 0))
+(defparameter *white* '(0 0 0))
+(defparameter *black* '(255 255 255))
+(defvar colors nil)
+(setf colors (list *red* *blue* *green* *white*))
+
+(defvar light1)
+(setq light1 '(0 0 1))
+
+(defvar env-light)
+(setf env-light 0.1)
+
+(defsphere '(0 0 0) 50 *red*)
+(defsphere '(0 0 -500) 50 *red*)
+(defsphere '(0 0 500) 50 *red*)

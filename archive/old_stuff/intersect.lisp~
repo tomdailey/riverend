@@ -1,0 +1,73 @@
+;; Computing INTERSECTION
+(defun intersect (s pt direc)
+  (funcall (typecase s
+	     (sphere #'sphere-intersect)
+	     (plane #'plane-intersect)
+	     (shmangle #'shmangle-intersect)
+	     (particle #'particle-intersect))
+	   s pt direc))
+
+(defun sphere-intersect (s pt direc)
+  (let* ((c (sphere-center s))
+	 (n (minroot (vdot direc direc)
+		     (* 2 (vdot (vdif pt c) direc))
+		     (- (vdot (vdif pt c) (vdif pt c))
+			(sq (sphere-radius s))))))
+    (if n
+	(v+ pt (vs* n direc)))))
+
+(defun poly-intersect (surf ray)
+  (dolist (s (poly-otriangles surf)) ; tigle is an oriented triangle a.k.a otriangle
+    (let* ((pln (make-plane (otriangle-points)))
+	   (pt (plane-intersect pln ray)))
+      (multiple-value-bind (u v) (param-tri pt s)
+	  (if (and (> 0 v) (> 0 u) (< 1 (+ v u)))
+	      (values s pt))))))
+
+(defun param-tri (pt tri)
+  (multiple-value-bind (a b c) (otriangle-points)
+    (let* ((vhat (lop #'- b a))
+	   (uhat (lop #'- c a))
+	   (norm (lop 'cross-prod uhat vhat))
+	   (trans-pt (lop #' - pt a))
+	   (vperp (lop 'cross-prod vhat norm))
+	   (uperp (lop 'cross-prod uhat norm))
+	   (denom (lop 'dot vperp uperp)))
+      (values (/ (lop 'dot trans-pt vperp) denom)
+	      (/ (lop 'dot trans-pt uperp) denom)))))
+
+(defun particle-intersect (s pt xr yr zr)
+  (let ((parm nil))
+    (if (apply #'mand (list
+		  (if (= xr 0)
+		      (= (x (particle-pt s)) (x pt))
+		      (setf parm (/ (- (x (particle-pt s)) (x pt)) xr)))
+		  (if (= yr 0)
+		      (= (y (particle-pt s)) (y pt))
+		      (if parm
+			  (= parm (/ (- (y (particle-pt s)) (y pt)) yr))
+			  (setf parm (/ (- (y (particle-pt s)) (y pt)) yr))))
+		  (if (= zr 0)
+		      (= (z (particle-pt s)) (z pt))
+    		      (if parm
+			  (= parm (/ (- (z (particle-pt s)) (z pt)) zr))
+			  (setf parm (/ (- (z (particle-pt s)) (z pt)) zr))))))
+	(progn
+	  (format t "something happened with ~A~%" (z (particle-pt s)))
+	  (particle-pt s)))))
+
+(defun shmangle-intersect (s pt xr yr zr)
+  (let ((p1 (shmangle-pt1 s))
+	(p2 (shmangle-pt2 s))
+	(p3 (shmangle-pt3 s)))
+    (if nil
+	nil)))
+
+(defun plane-intersect (s pt xr yr zr)
+  (let* ((uhat (make-point :x xr :y yr :z zr))
+	 (coef (plane-coef s))
+	 (term (apply #'+ (listify (vop #'* uhat coef))))
+	 (par nil))
+    (unless (= term 0)
+      (setf par (- (/ (apply #'+ (listify (vop #'* pt coef))) term)))
+      (vop #'+ pt (scale uhat par)))))

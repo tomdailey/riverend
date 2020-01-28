@@ -1,0 +1,22 @@
+RIVEREND 
+/bespoke animation suite in Common LISP/
+
+Oooh what a fancy tagline
+
+* Origins
+  This code was originally born from the raytracing exmaple given in Paul Graham's /ANSI Common LISP/
+
+                        
+* Current State
+* Future Plans
+** Ray-tracing improvements
+Sooo, I want to have lighting functions include things like movable lights, multiple lights, spot lights, varying intensity, and *shadows*. This means building a light object, and modifying ~lambert~ to compute brightness by finding which lights hit that point, and at what intensities, and then computing shine/reflection.
+Then of course, it'd be nice to change brightness and color according to material properties of the other places the ray goes. I haven't thought too much about how the rest of this would go.
+The weird thing is that after the first surface, there's no single ray to go look at, is there? You're kind of interested in the whole environment. Does that you have scan all vectors with non-negative dot products with the normal of the tangent surface? That's waaay too many calculations.
+I'll worry about this at a later date.
+** CLOS-ification 
+Write now I'm trying to use what I've learned about CLOS to replace structures with objects. Hopefully this will facillitate advances in geometry specification/typing.
+** Geometry Specification
+At some point I should look into making macros to implement TBAG geometry.
+** LTK integration
+I'd love for the process of using this to involve a proper gui window that updates frames, and maybe implements a simple frame-browser. My workflow now is pretty janky.

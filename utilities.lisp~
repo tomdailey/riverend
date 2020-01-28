@@ -1,0 +1,52 @@
+(defun sq (x) (* x x))
+
+(defun mag (&rest lst)
+  (sqrt (apply #'+ (mapcar #'sq lst))))
+
+(defun list-copies (thing n)
+  (if (= n 0)
+      nil
+      (cons thing (list-copies thing (- n 1)))))
+
+(defun vdif (v1 v2)
+  (mapcar #'- v1 v2))
+
+(defun vdot (v1 v2)
+  (apply #'+ (mapcar #'* v1 v2)))
+
+(defmacro v+ (&rest list-of-vecs)
+  `(mapcar #'+ @list-of-vecs))
+
+(defun vs* (s v)
+  (mapcar #'* v (list-copies s (length v))))
+
+(defun unitize (v)
+  (vs* (/ 1 (mag v)) v))
+
+(defun vcross (x y)
+  (list
+   (- (* (nth 2 x) (nth 1 y)) (* (nth 1 x) (nth 2 y)))
+   (- (* (nth 0 x) (nth 2 y)) (* (nth 2 x) (nth 0 y)))
+   (- (* (nth 0 x) (nth 1 y)) (* (nth 1 x) (nth 0 y)))))
+
+(defun random-elt (choices)
+  "Choose an element from a list at random."
+  (elt choices (random (length choices))))
+
+(defun average (&rest lst)
+  (/ (apply #'+ lst) (length lst)))
+
+(defun vdistance (v1 v2)
+  (mag (vdif v1 v2)))
+
+(defun minroot (a b c)
+  (if (zerop a)
+      (/ (- c) b)
+      (let ((disc (- (sq b) (* 4 a c))))
+	(unless (minusp disc)
+	  (let ((discrt (sqrt disc)))
+	    (min (/ (+ (- b) discrt) (* 2 a))
+		 (/ (- (- b) discrt) (* 2 a))))))))
+
+(defmacro mand (macro-args)
+  `(and ,@macro-args))

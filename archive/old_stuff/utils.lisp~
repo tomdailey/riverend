@@ -1,0 +1,53 @@
+(defun sq (x) (* x x))
+
+(defun mag (x y z)
+  (sqrt (+ (sq x) (sq y) (sq z))))
+
+(defun unit-vector (x y z)
+  (let ((d (mag x y z)))
+    (values (/ x d) (/ y d) (/ z d))))
+
+(defun unitize (x)
+  (let ((d (d)))))
+
+(defstruct (point (:conc-name nil))
+  x y z)
+
+(defun scale (v c)
+  (make-point :x (* (x v) c)
+	      :y (* (y v) c)
+	      :z (* (z v) c)))
+
+(defun distance (p1 p2)
+  (mag (- (x p1) (x p2))
+       (- (y p1) (y p2))
+       (- (z p1) (z p2))))
+
+(defun pointwise-op (fn &rest list)
+  (make-point
+   :x (apply fn (mapcar #'x list))
+   :y (apply fn (mapcar #'y list))
+   :z (apply fn (mapcar #'z list))))
+
+(defun vop (fn &rest list)
+  (make-point
+   :x (apply fn (mapcar #'x list))
+   :y (apply fn (mapcar #'y list))
+   :z (apply fn (mapcar #'z list))))
+(defun listify (pt)
+  (list (x pt) (y pt) (z pt)))
+
+(defun minroot (a b c)
+  (if (zerop a)
+      (/(- c) b)
+      (let ((disc (- (sq b) (* 4 a c))))
+	(unless (minusp disc)
+	  (let ((discrt (sqrt disc)))
+	    (min (/ (+ (- b) discrt) (* 2 a))
+		 (/ (- (- b) discrt) (* 2 a))))))))
+
+(defun mand (a &rest ls)
+  (if ls
+      (and a (apply #'mand ls))
+      a))
+
