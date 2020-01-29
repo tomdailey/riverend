@@ -1,7 +1,6 @@
 (load "/home/tom/Documents/lisp_programs/riverend/utilities.lisp")
 (load "/home/tom/Documents/lisp_programs/riverend/new.lisp")
 
-
 (defparameter *world* nil)
 (defvar eye '(0 0 -700))
 
@@ -33,18 +32,33 @@
       (format t "~A is where I am~%" i))))
 
 (let ((count 0)
-      (reso 5))
+      (reso 5)
+      (mode 'i))
   (defun set-count (&optional (num 0))
     (setf count num))
+  (defun flip-mode () (setf mode (not mode)))
   (defun set-res (num)
     (setf reso num))
-  (defun incr () (setq count (+ 1 count)))
+  (defun incr () (setf count (+ 1 count)))
   (defun test ()
-    (tracer (format nil "test~A.png" count) reso)))
+    (tracer (format nil "test~A.png" count) reso)
+    (when mode (incr))))
+
+(defvar *board-functions* nil)
+(defun clear-board () (setf *board-functions* nil))
+(defun add-board-function (fn)
+  (push fn *board-functions*))
+
+(defun sphere-line (x fn)
+  (do ((i 0 (1+ i))
+       (acc '(0 0 0)))
+      ((> i x))
+    (defsphere (setf acc (funcall fn acc)) 10 *blue*)))
+	      
 
 (defun reset-world () (setf *world* nil))
 
 (defun my-world ()
   (reset-world)
-  (dotimes (i 10)
-    (make-h-grid (- (* i 10) 50) 10 10 2)))
+  (dotimes (i 1)
+    (make-h-grid (- (* i 10) 50) 10 10 10)))

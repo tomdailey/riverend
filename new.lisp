@@ -1,6 +1,9 @@
 (ql:quickload 'zpng)
 (use-package 'zpng)
 
+(defvar *bet-blue*)
+(setf *bet-blue* (list 140 170 200))
+
 (defun tracer (file res)
   "Make a png with given name, 128x72 at given resolution"
   (let ((png (make-instance 'pixel-streamed-png
@@ -18,17 +21,19 @@
 	  ((= x -36))
 	(do ((y 64 (- y rescon))) ; we have to write in from the top (high y val's)
 	    ((= y -64))
-	  (let ((col (color-at x y))) ; col is 4 list
+	  (let ((col (or (board-point x y)
+			 (color-at x y))))
 	    (cond
-	      ((= 0 (mod y 10))
-	       (write-pixel '(100 100 255 255) png))
-	      ((= 0 (mod x 10))
-	       (write-pixel '(100 100 255 255) png))
 	      ((legal-colors-p col)
 	       (write-pixel col png))
 	      (t (write-pixel '(100 50 0 255) png))))))
       (finish-png png))))
 
+(defun board-point (x y)
+  (let ((acc nil))
+    (dolist (fn *board-functions*)
+      (push (funcall fn x y) acc))
+    (car (member t acc))))
 
 (defun legal-colors-p (color-list)
   (if (rest color-list)
@@ -42,14 +47,14 @@
     (sendray eye ray-direction)))
 
 (defun sendray (pt direc)
-  (multiple-value-bind (hsurface int-pnt) (first-hit pt direc)
-    (if hsurface
-	(let ((hsurface-col (surface-base-color hsurface))
-	      (hsurface-alpha (surface-alpha hsurface))
-	      (brightness (lambert hsurface int-pnt direc)))
-	  (append (mapcar #'(lambda (x) (round (* brightness x))) hsurface-col)
-		  (list hsurface-alpha)))
-	'(0 0 0 255)))) ;; if no hsurface hits, make it black and opaque
+  (multiple-value-bind (hsurfer int-pnt) (first-hit pt direc)
+    (if hsurfer
+	(let ((hsurfer-col (surfcol hsurface))
+	      (hsurfer-alpha (surf-alpha hsurfer))
+	      (brightness (lambert hsurfer int-pnt direc)))
+	  (append (mapcar #'(lambda (x) (round (* brightness x))) hsurfer-col)
+		  (list hsurfer-alpha)))
+	'(0 0 0 255)))) ;; if no hsurfer hits, make it black and opaque
 
 (defun first-hit (pt direc)
   (let (surface hit dist)
@@ -74,6 +79,31 @@ alpha)
 
 (defstruct (sphere (:include surface))
   radius center)
+
+(defclass surfer ()
+  ((color :accessor surf-color
+	  :initarg :color
+	  :initform *bet-blue*)
+   (alpha :accessor surf-alpha
+	  :initarg :alpha
+	  :initform 255)))
+
+(defclass ball (surfer)
+  ((radius :accessor ball-radius
+	   :initarg :radius
+	   :initform 10)
+   (center :accessor ball-center
+	   :initarg :center
+	   :initform (list 0 0 0))))
+
+(defun add-ball (cent rad col)
+  (push (make-instance 'ball
+		       :center cent
+		       :radius rad
+		       :color col)
+	*world*))
+		       
+	 
 
 (defun defsphere (center r col &optional (alpha 255))
   (let ((s (make-sphere

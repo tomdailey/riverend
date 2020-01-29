@@ -20,14 +20,15 @@
 	    ((= y -64))
 	  (let ((col (color-at x y))) ; col is 4 list
 	    (cond
-	      ((= (rem x 20) 0)
+	      ((= 0 (mod y 10))
 	       (write-pixel '(100 100 255 255) png))
-	      ((= (rem y 20) 0)
+	      ((= 0 (mod x 10))
 	       (write-pixel '(100 100 255 255) png))
 	      ((legal-colors-p col)
 	       (write-pixel col png))
 	      (t (write-pixel '(100 50 0 255) png))))))
       (finish-png png))))
+
 
 (defun legal-colors-p (color-list)
   (if (rest color-list)
@@ -83,25 +84,6 @@ alpha)
     (push s *world*)
     s))
 
-(defstruct (plane (:include surface))
-  plan-coef)
-(defun defplane (x y z color &optional (alpha 255))
-  (let ((s (make-plane
-	    :base-color color
-	    :alpha 255)
-	    :plan-coef (list x y z)))
-    (push s *world*)
-    s))
-
-(defstruct (shmangle (:include surface))
-  vertices) 
-(defun defshmangle (v1 v2 v3 c &optional (alpha 255))
-  (push (make-shmangle :vertices '(v1 v2 v3)
-		       :base-color c))
-  *world*))
-
-;; Computing INTERSECTION
-;; Note, this should really be being done with objects, and generic "intersect" function
 (defun intersect (s pt direc)
   (funcall (typecase s
 	     (sphere #'sphere-intersect)
@@ -118,7 +100,6 @@ alpha)
     (if n
 	(let ((difference (vs* n direc)))
 	  (v+ pt difference)))))
-
 		
 (defun poly-intersect (surf ray)
   (dolist (s (poly-otriangles surf)) ; tigle is an oriented triangle a.k.a otriangle
@@ -139,32 +120,6 @@ alpha)
     (values (/ (vdot trans-pt vperp) denom)
 	    (/ (vdot trans-pt uperp) denom))))
 
-(defun shmangle-intersect (s pt direc)
-  (let ((p1 (shmangle-v1 s))
-	(p2 (shmangle-v2 s))
-	(p3 (shmangle-v3 s)))
-    (let ((int (plane-intersect (specify-plane p1 p2 p3) pt direc)))
-      (if int
-	  (multiple-value-bind (u v) (param-tri int p1 p2 p3)
-	    (if (and (> 0 u) (> 0 v) (< 1 (+ u v)))
-		int))))))
-
-;; PLANES
-(defun vop (fn &rest list)
-  (make-point
-   :x (apply fn (mapcar #'x list))
-   :y (apply fn (mapcar #'y list))
-   :z (apply fn (mapcar #'z list))))
-(defun plane-intersect (s pt xr yr zr)
-  (let* ((uhat (make-point :x xr :y yr :z zr))
-	 (coef (plane-coef s))
-	 (term (apply #'+ (listify (vop #'* uhat coef))))
-	 (par nil))
-    (unless (= term 0)
-      (setf par (- (/ (apply #'+ (listify (vop #'* pt coef))) term)))
-      (vop #'+ pt (scale uhat par)))))
-
-;; Computing NORMALS
 (defun normal (s pt)
   (funcall (typecase s
 	     (sphere #'sphere-normal)
@@ -175,8 +130,3 @@ alpha)
   (let ((c (sphere-center s)))
     (unitize (vdif c pt))))
 
-(defun plane-normal (s pt)
-  (let ((c (plane-coef s)))
-    (unit-vector (first c)
-		 (second c)
-		 (third c))))
