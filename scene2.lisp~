@@ -1,13 +1,14 @@
 (defun ray-test (filename &optional (res 1))
   (setf *world* nil)
   (defsphere 0 0 700 100 *green*)
+;  (defsphere 0 0 -200 1000 0.2)
   (tracer (make-pathname :name filename) res))
 
 (let ((frame 1))
   (defun reset-frame ()
     (setf frame 0))
   (defun make-frame ()
-    (tracer (format nil "blest/blest~4,'0d.png" frame) 5)
+    (tracer (format nil "blest/blest~3,'0d.pgm" frame) 5)
     (setf frame (1+ frame))))
 
 (defun run-anim ()
@@ -22,8 +23,8 @@
 	      elapsed-time
 	      (/ elapsed-time 60.0)))))
 
-(defvar light1)
-(setf light1 '(1 0 0.5)
+(defvar *light1*)
+(setf *light1* (make-point :x 1 :y 0 :z 0.5))
 
 (defun update-shit (i)
   ;; update lighting

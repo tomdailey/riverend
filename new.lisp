@@ -1,12 +1,6 @@
-(ql:quickload 'zpng)
-(use-package 'zpng)
-
-(defvar *bet-blue*)
-(setf *bet-blue* (list 140 170 200))
-
 (defun tracer (file res)
   "Make a png with given name, 128x72 at given resolution"
-  (let ((png (make-instance 'pixel-streamed-png
+  (let ((png (make-instance 'zpng:pixel-streamed-png
                              :color-type :truecolor-alpha
                              :width (* 128 res)
                              :height (* 72 res)))
@@ -16,24 +10,25 @@
 			    :if-exists :supersede
 			    :if-does-not-exist :create
 			    :element-type '(unsigned-byte 8))
-      (start-png png stream)
+      (zpng:start-png png stream)
       (do ((x 36 (- x rescon)))
 	  ((= x -36))
-	(do ((y 64 (- y rescon))) ; we have to write in from the top (high y val's)
-	    ((= y -64))
-	  (let ((col (or (board-point x y)
-			 (color-at x y))))
+	(do ((y -64 (+ y rescon))) ; we have to write in from the top (high y val's)
+	    ((= y 64))
+	  (let ((col (or (board-point y x)
+			 (color-at y x))))
 	    (cond
 	      ((legal-colors-p col)
-	       (write-pixel col png))
-	      (t (write-pixel '(100 50 0 255) png))))))
-      (finish-png png))))
+	       (zpng:write-pixel col png))
+	      (t (zpng:write-pixel '(254 254 255 255) png))))))
+      (zpng:finish-png png))))
 
 (defun board-point (x y)
   (let ((acc nil))
-    (dolist (fn *board-functions*)
-      (push (funcall fn x y) acc))
-    (car (member t acc))))
+    (dotimes (i (length *board-functions*))
+      (push (funcall (nth i *board-functions*) x y) acc))
+    (car (member-if-not #'null acc))))
+   ;; (car (member t acc))))
 
 (defun legal-colors-p (color-list)
   (if (rest color-list)
@@ -49,19 +44,19 @@
 (defun sendray (pt direc)
   (multiple-value-bind (hsurfer int-pnt) (first-hit pt direc)
     (if hsurfer
-	(let ((hsurfer-col (surfcol hsurface))
+	(let ((hsurfer-col (surf-color hsurfer))
 	      (hsurfer-alpha (surf-alpha hsurfer))
 	      (brightness (lambert hsurfer int-pnt direc)))
 	  (append (mapcar #'(lambda (x) (round (* brightness x))) hsurfer-col)
 		  (list hsurfer-alpha)))
-	'(0 0 0 255)))) ;; if no hsurfer hits, make it black and opaque
+	'(0 0 0 255)))) ;; if no hsurfer is hit, make it black and opaque
 
 (defun first-hit (pt direc)
   (let (surface hit dist)
     (dolist (surf *world*)
       (let ((h (intersect surf pt direc)))
 	(when h
-	  (let ((d (vdistance h pt)))
+	  (let ((d (vdist h pt)))
 	    (when (or (null dist) (< d dist))
 	      (setf surface surf
 		    hit h
@@ -70,16 +65,10 @@
 
 (defun lambert (s intersec light) ; Note that light should be a unit vector
   (let ((norm (normal s intersec)))
-    (max 0 (vdot norm (unitize light)))))
+    (let ((ans (vdot norm (unitize '(1 0 0)))))
+      (max ans (- ans)))))
 
 ;; Types of shapes
-(defstruct surface
-base-color
-alpha)
-
-(defstruct (sphere (:include surface))
-  radius center)
-
 (defclass surfer ()
   ((color :accessor surf-color
 	  :initarg :color
@@ -88,75 +77,13 @@ alpha)
 	  :initarg :alpha
 	  :initform 255)))
 
-(defclass ball (surfer)
-  ((radius :accessor ball-radius
-	   :initarg :radius
-	   :initform 10)
-   (center :accessor ball-center
-	   :initarg :center
-	   :initform (list 0 0 0))))
+(defclass object ()
+  ((trans :accessor obj-trans
+	  :initarg :trans
+	  :initform (lambda (x)))))
 
-(defun add-ball (cent rad col)
-  (push (make-instance 'ball
-		       :center cent
-		       :radius rad
-		       :color col)
-	*world*))
-		       
-	 
-
-(defun defsphere (center r col &optional (alpha 255))
-  (let ((s (make-sphere
-	    :radius r
-	    :center center
-	    :base-color col
-	    :alpha alpha)))
-    (push s *world*)
-    s))
-
-(defun intersect (s pt direc)
-  (funcall (typecase s
-	     (sphere #'sphere-intersect)
-	     (plane #'plane-intersect)
-	     (shmangle #'shmangle-intersect))
-	   s pt direc))
-
-(defun sphere-intersect (s pt direc)
-  (let* ((c (sphere-center s))
-	 (n (minroot (vdot direc direc)
-		     (* 2 (vdot (vdif pt c) direc))
-		     (- (vdot (vdif pt c) (vdif pt c))
-			(sq (sphere-radius s))))))
-    (if n
-	(let ((difference (vs* n direc)))
-	  (v+ pt difference)))))
-		
-(defun poly-intersect (surf ray)
-  (dolist (s (poly-otriangles surf)) ; tigle is an oriented triangle a.k.a otriangle
-    (let* ((pln (make-plane (otriangle-points)))
-	   (pt (plane-intersect pln ray)))
-      (multiple-value-bind (u v) (param-tri pt s)
-	  (if (and (> 0 v) (> 0 u) (< 1 (+ v u)))
-	      (values s pt))))))
-
-(defun param-tri (pt v1 v2 v3)
-  (let* ((vhat (vdif v2 v1))
-	 (uhat (vdif v3 v1))
-	 (norm (vcross uhat vhat))
-	 (trans-pt (vdif pt v1))
-	 (vperp (vcross vhat norm))
-	 (uperp (vcross uhat norm))
-	 (denom (vdot vperp uperp)))
-    (values (/ (vdot trans-pt vperp) denom)
-	    (/ (vdot trans-pt uperp) denom))))
-
-(defun normal (s pt)
-  (funcall (typecase s
-	     (sphere #'sphere-normal)
-	     (plane #'plane-normal))
-	   s pt))
-
-(defun sphere-normal (s pt)
-  (let ((c (sphere-center s)))
-    (unitize (vdif c pt))))
+(load "/home/tom/Documents/lisp_programs/riverend/ball.lisp")
+(load "/home/tom/Documents/lisp_programs/riverend/tri.lisp")
+		   
+	
 
