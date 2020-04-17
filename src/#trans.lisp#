@@ -1,0 +1,9 @@
+(in-package :riverend)
+
+(defmethod move ((guy tri) peturb)
+  (let ((new1 (vplus (tri-v1 guy) peturb))
+	(new2 (vplus (tri-v2 guy) peturb))
+	(new3 (vplus (tri-v3 guy) peturb)))
+    (setf (tri-v1 guy) new1)
+    (setf (tri-v2 guy) new2)
+    (setf (tri-v3 guy) new3)))

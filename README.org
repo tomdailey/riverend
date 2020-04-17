@@ -5,9 +5,12 @@ Oooh what a fancy tagline
 
 * Origins
   This code was originally born from the raytracing exmaple given in Paul Graham's /ANSI Common LISP/
-
                         
 * Current State
+The structure of the project is roughly as follows:
+- tracer contains a raytracing function and some helpers to do the job
+- tri and ball are files with class definitions, and  ~normal~ and ~intersect~ generic functoins. They are both ~surfers~
+
 * Future Plans
 ** Ray-tracing improvements
 Sooo, I want to have lighting functions include things like movable lights, multiple lights, spot lights, varying intensity, and *shadows*. This means building a light object, and modifying ~lambert~ to compute brightness by finding which lights hit that point, and at what intensities, and then computing shine/reflection.
