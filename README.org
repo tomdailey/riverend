@@ -8,8 +8,13 @@ Oooh what a fancy tagline
                         
 * Current State
 The structure of the project is roughly as follows:
-- tracer contains a raytracing function and some helpers to do the job
-- tri and ball are files with class definitions, and  ~normal~ and ~intersect~ generic functoins. They are both ~surfers~
+- tracer.lisp contains a raytracing function and some helpers to do the job
+- tri.lisp and ball.lisp are files with class definitions for tri and ball, as well as ~normal~ and ~intersect~ generic functions. They are both ~surfers~
+- Tracer will render the environment modeled by the \*world\* list by cycling through it, for each ray, and calculating the closest intersection.
+- colors contains functions for generating and managing colors. Need to move some stuff from env to colors.
+- env has all sorts of auxilliary functions for actually generating scenes.
+- We still aren't propertly rendering to a video stream. There is undoubtedly a way to do that, though.
+
 
 * Future Plans
 ** Ray-tracing improvements

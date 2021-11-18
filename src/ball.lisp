@@ -39,3 +39,8 @@
   "Print object to your taste"
   (format *info* "Ball center: ~A~%" (ball-center s))
   (format *info* "Ball color: ~A~%" (surf-color s)))
+
+(defun random-center ()
+  (list (- (random 200) 50)
+	(- (random 200) 50)
+	(- (random 200) 50)))

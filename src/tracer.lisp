@@ -4,8 +4,12 @@
 (defvar eye '(0 0 -700))
 (defvar *lights1* (list '(0 0 -1)))
 
+(defun clear-world! ()
+  (setf *world* nil))
+
+
 (defun tracer (file res)
-  "Make a png with given name, 128x72 at given resolution"
+  "Make a png with given file name, 128x72 times res for its resolution"
   (let ((png (make-instance 'pixel-streamed-png
                              :color-type :truecolor-alpha
                              :width (* 128 res)
